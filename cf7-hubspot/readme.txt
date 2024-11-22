@@ -2,9 +2,9 @@
 Contributors: crmperks, sbazzi
 Tags: contact form 7, contact form 7 hubspot, elementor forms hubspot, wpforms hubspot, ninja forms hubspot
 Requires at least: 3.8
-Tested up to: 6.6
-Stable tag: 1.3.4
-Version: 1.3.4
+Tested up to: 6.7
+Stable tag: 1.3.5
+Version: 1.3.5
 Requires PHP: 5.3
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -145,6 +145,9 @@ Do not replace your Contact form 7 forms with HubSpot forms. Simply map contact 
 == Changelog ==
 
 
+= 1.3.5 =
+* fixed "missing lists" issue.
+* fixed "missmatch scopes" issue.
 
 = 1.3.4 =
 * fixed "curl error when connecting account" issue.

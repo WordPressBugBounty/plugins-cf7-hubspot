@@ -503,23 +503,33 @@ $hubspot_response=$this->post_hubspot_arr($path);
   * Get campaigns from hubspot
   * @return array HubSpot campaigns
   */
-public function get_lists(){ 
-    $hubspot_response=$this->post_hubspot_arr('contacts/v1/lists/static?count=500');
- // var_dump($hubspot_response);
-  ///seprating fields
-  $field_info=__('No List Found','gravity-forms-hubspot-crm');
-  if(isset($hubspot_response['lists']) && is_array($hubspot_response['lists'])){
-  $field_info=array();
-  foreach($hubspot_response['lists'] as $k=>$field){
-      if($field['dynamic'] === false){
-  $field_info[$field['listId']]=$field['name'];
-     }     
-  }
-  }
-    if(isset($hubspot_response['message'])){
-   $field_info=$hubspot_response['message'];   
-  }
-  return $field_info;
+public function get_lists(){
+
+
+$lists = array(); 
+$offset = 0;  $more=false;
+do {
+$response=$this->post_hubspot_arr('crm/v3/lists/search','post',array('processingTypes'=>array('MANUAL'),'count'=>100,'offset'=>$offset));
+ 
+  if(isset($response['lists']) && is_array($response['lists'])){
+  foreach($response['lists'] as $k=>$field){
+  $lists[$field['listId']]=$field['name'];    
+  } 
+  if (isset($response['hasMore']) && $response['hasMore'] === true) { 
+      $more=true; $offset=$response['offset']; 
+} else {
+// No more pages, break the loop
+break;
+}
+  }else if(isset($hubspot_response['message'])){
+   return $hubspot_response['message'];   
+  } else {
+// Handle unexpected response format (optional)
+return __('No List Found','gravity-forms-hubspot-crm');; // Or throw an exception
+}
+} while ($more); // Loop until there's no more "next" link
+
+  return $lists;
 }
 public function get_pipes($object='tickets'){ 
 $hubspot_response=$this->post_hubspot_arr('crm-pipelines/v1/pipelines/'.$object);

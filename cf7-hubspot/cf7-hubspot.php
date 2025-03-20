@@ -2,7 +2,7 @@
 /**
 * Plugin Name: WP Contact Form HubSpot
 * Description: Integrates Contact Form 7 and <a href="https://wordpress.org/plugins/contact-form-entries/">Contact Form Entries Plugin</a> and many other forms with HubSpot allowing form submissions to be automatically sent to your HubSpot account 
-* Version: 1.3.6
+* Version: 1.3.7
 * Requires at least: 3.8
 * Author URI: https://www.crmperks.com
 * Plugin URI: https://www.crmperks.com/plugins/contact-form-plugins/contact-form-hubspot-plugin/
@@ -25,7 +25,7 @@ class vxcf_hubspot {
   public  $crm_name = "hubspot";
   public  $id = "vxcf_hubspot";
   public  $domain = "vxcf-hubspot";
-  public  $version = "1.3.6";
+  public  $version = "1.3.7";
   public  $update_id = "6000001";
   public  $min_cf_version = "1.0";
   public $type = "vxcf_hubspot";
@@ -1697,7 +1697,7 @@ $entry['_vx_ip']=$this->get_client_ip();
 if(empty($form['__vx_addons']) && ($event == '' || $event == 'update' || $event == 'submit')){
 $entry=apply_filters('vx_crm_post_fields',$entry,$entry_id,$type,$form);
 } 
-///var_dump($entry,$entry_id,$type); die('--------');
+//var_dump($entry,$entry_id,$type); die('--------');
    $screen_msg_class="updated"; $notice=""; $log_link='';
   if(is_array($feeds_meta) && count($feeds_meta)>0){
   foreach($feeds_meta as $feed){
@@ -2085,9 +2085,15 @@ return $ip;
   * @return array
   */
   public function get_objects($info="",$refresh=false){
- $objects=array("Contact"=>'Contact',"Company"=>'Company',"Task"=>'Task',"Ticket"=>'Ticket',"Deal"=>'Deal');
-    
-      if(!empty($info)){   
+ 
+      $objects=array("Contact"=>'Contact',"Company"=>'Company',"Deal"=>'Deal',"Ticket"=>'Ticket',"Task"=>'Task','leads'=>'Leads','orders'=>'Orders','invoices'=>'Invoices','carts'=>'Carts','products'=>'Products'); //,'quotes'=>'Quotes'
+            if(isset($info['data']) && is_array($info['data']) && !(isset($info['data']['api']) && $info['data']['api'] == 'api' && empty($info['data']['object_lib']) )){
+                $objects['0-420']='Listings';
+                $objects['0-421']='Appointemts';
+                $objects['0-162']='Services';
+                $objects['0-410']='Courses';
+            }
+       if(!empty($info)){   
    $meta=$this->post('meta',$info);  
    }else{
    $meta=get_option($this->id.'_meta',array());    
@@ -2101,6 +2107,10 @@ return $ip;
 
  if($refresh){
   $api=$this->get_api($info); 
+  $custom_objects=$api->get_custom_objects();
+  if(!empty($custom_objects)){
+      $objects=array_merge($objects,$custom_objects);
+  } 
   $res=$api->get_forms(); 
 
 if(is_array($res) && isset($res[0])){
@@ -2130,7 +2140,7 @@ $res=$this->post_hubspot_arr($path);
   $meta["objects"]=$objects;
   $this->update_info(array("meta"=>$meta),$info['id']);
   }
- } 
+ }
   return $objects;    
  }
    /**

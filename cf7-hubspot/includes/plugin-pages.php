@@ -808,6 +808,7 @@ public function has_feed($form_id) {
   $account=$this->post('account');
   $status_sel=$this->post('status');
   $owner_sel=$this->post('owner');
+  $object=$this->post('object');
 
  $info=array(); $meta=array();
   if(!empty($account)){
@@ -866,7 +867,9 @@ public function has_feed($form_id) {
   $res['data']=$data;   
       break;  
   case"refresh_sales_pipes":
-    $camps=$api->get_pipes('deals'); 
+              $pipe_name=$object.'_pipes';
+           if($object == 'Deal'){ $object='deals'; $pipe_name='deal_pipes'; }
+    $camps=$api->get_pipes($object); 
     $data=array();
     if(is_array($camps)){
     $res['status']="ok";
@@ -1182,18 +1185,28 @@ public function get_feed_link($id=""){
     $str="admin.php?page={$this->id}&tab={$tab}&id={$id}" ;
   return  admin_url( $str );
 }  
-  public function get_search_fields($module){
+ public function get_search_fields($module){
     $arr=$post=array();
       if($module == 'Contact'){
      $arr=array('firstName'=>'First Name','lastName'=>'Last Name','email'=>'Email','phone'=>'Phone');   
     }else if($module == 'Company'){
   $arr=array('domain'=>'Company Domain Name','name'=>'Name','phone'=>'Phone Number','website'=>'Website');       
     }
-       if(self::$is_pr){
+     if(self::$is_pr){
      if($module == 'Deal'){
   $arr=array('dealname'=>'Deal Name');       
     }else if($module == 'Ticket'){
-  $arr=array('subject'=>'Subject');       
+  $arr=array('subject'=>'Subject','content'=>'Content');       
+    }else if($module == 'leads'){
+  $arr=array('hs_lead_name'=>'Lead Name');       
+    }else if($module == 'invoices'){
+  $arr=array('hs_title'=>'Title','hs_number'=>'Number');       
+    }else if($module == 'orders'){
+  $arr=array('hs_order_name'=>'Name');       
+    }else if($module == '0-410'){ //course
+  $arr=array('hs_course_name'=>'Course Name','hs_course_id'=>'Course ID');       
+    }else if( in_array($module,array('0-420','0-162'))){ //listing
+  $arr=array('hs_name'=>'Name'); //hs_price       
     }
     }
   
@@ -1297,7 +1310,10 @@ $id= isset($feed['id']) ? $feed['id'] : '';
       $req=$this->post('req',$v);
       if($req == 'true'){
    $map_fields[$k]=$v;       
-      }  
+      }
+       if(!empty($v['search']) && !isset($search_fields[$k])){
+       $search_fields[$k]=$v;   
+      }   
   }
 //mapping fields
 foreach($map as $field_k=>$field_v){
@@ -1306,7 +1322,13 @@ foreach($map as $field_k=>$field_v){
   }  
 }
 
-
+$is_custom_object=false;
+if(strpos($module,'-') > 0){
+    $obj_id=strtok($module,'-');
+    if(intval($obj_id) > 0){
+   $is_custom_object=true;     
+    }
+}
 
 
   $sel_fields=array(""=>__("Standard Field",'contact-form-hubspot-crm'),"value"=>__("Custom Value",'contact-form-hubspot-crm'));

@@ -192,12 +192,13 @@ color: #727f30; font-size: 18px; vertical-align: middle;
 </style>
 <div class="updated below-h2 vx_pro_version" style="border-left-color: #1192C1; margin: 30px 20px 30px 0px">
 <h2>Premium Version</h2>
-<p><i class="fa fa-check"></i> HubSpot Custom fields.</p>
+<p><i class="fa fa-check"></i> HubSpot Custom fields and custom objects.</p>
 <p><i class="fa fa-check"></i> HubSpot Phone Number fields.</p>
-<p><i class="fa fa-check"></i> Assign a Contact to Ticket, Deal, Company or Task.</p>
-<p><i class="fa fa-check"></i> Assign a Company to Contact, Ticket, Task.</p>
+<p><i class="fa fa-check"></i> Assign a Contact to Deal, Lead, Order, Ticket, Task, Company, Course etc.</p>
+<p><i class="fa fa-check"></i> Assign a Company to Contact, Ticket, Task, Lead.</p>
 <p><i class="fa fa-check"></i> Add Contacts to HubSpot Lists.</p>
 <p><i class="fa fa-check"></i> Add Contacts to HubSpot Workflows.</p>
+<p><i class="fa fa-check"></i> Assign Pipeline and stage to any Hubspot Object.</p>
 <p><i class="fa fa-check"></i> Update deals and tickets in HubSpot.</p>
 <p><i class="fa fa-check"></i> Google Analytics Parameters and Geolocation of a visitor who submitted the form.</p>
 <p><i class="fa fa-check"></i> Lookup lead's email using email lookup apis. We support many email lookup apis like Fullcontact , Towerdata and pipl.com API.</p>

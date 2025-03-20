@@ -514,7 +514,7 @@ var crm_fields=<?php echo json_encode($json_fields); ?>;
   <!-------------------------- lead owner -------------------->
   <?php
   }
-                  if($module != 'Task'){
+ if(!in_array($module,array('Task','products')) && strpos($module,'vxf_') === false){ 
                       ?>
                       <div class="vx_div">
      <div class="vx_head">
@@ -587,70 +587,14 @@ var crm_fields=<?php echo json_encode($json_fields); ?>;
   </div>
                       <?php
                   }
-                  if( in_array($module, array('Task','Contact','Company'))){
-                 
-                      $users=$this->post('users',$info_meta);
-               ?>
-     <div class="vx_div vx_refresh_panel ">    
-      <div class="vx_head ">
-<div class="crm_head_div"> <?php echo sprintf(esc_html__('%s. Object Owner',  'contact-form-hubspot-crm' ),++$panel_count); ?></div>
-<div class="crm_btn_div"><i class="fa crm_toggle_btn fa-minus" title="<?php esc_html_e('Expand / Collapse','contact-form-hubspot-crm') ?>"></i></div>
-<div class="crm_clear"></div> 
-  </div>                 
-    <div class="vx_group ">
-   <div class="vx_row"> 
-   <div class="vx_col1"> 
-  <label for="crm_owner"><?php esc_html_e("Assign Owner ", 'contact-form-hubspot-crm'); $this->tooltip('vx_owner_check');?></label>
-  </div>
-  <div class="vx_col2">
-  <input type="checkbox" style="margin-top: 0px;" id="crm_owner" class="crm_toggle_check <?php if(empty($users)){echo 'vx_refresh_btn';} ?>" name="meta[owner]" value="1" <?php echo !empty($meta["owner"]) ? "checked='checked'" : ""?> autocomplete="off"/>
-    <label for="owner"><?php esc_html_e("Enable", 'contact-form-hubspot-crm'); ?></label>
-  </div>
-<div class="clear"></div>
-</div>
-    <div id="crm_owner_div" style="<?php echo empty($meta["owner"]) ? "display:none" : ""?>">
-  <div class="vx_row">
-  <div class="vx_col1">
-  <label><?php esc_html_e('Users List ','contact-form-hubspot-crm'); $this->tooltip('vx_owners'); ?></label>
-  </div>
-  <div class="vx_col2">
-  <button class="button vx_refresh_data" data-id="refresh_users" type="button" autocomplete="off" style="vertical-align: baseline;">
-  <span class="reg_ok"><i class="fa fa-refresh"></i> <?php esc_html_e('Refresh Data','contact-form-hubspot-crm') ?></span>
-  <span class="reg_proc"><i class="fa fa-refresh fa-spin"></i> <?php esc_html_e('Refreshing...','contact-form-hubspot-crm') ?></span>
-  </button>
-  </div> 
-   <div class="clear"></div>
-  </div> 
 
-  <div class="vx_row">
-   <div class="vx_col1">
-  <label for="crm_sel_user"><?php esc_html_e('Select User ','contact-form-hubspot-crm'); $this->tooltip('vx_sel_owner'); ?></label>
-</div> 
-<div class="vx_col2">
-
-  <select id="crm_sel_user" name="meta[user]" style="width: 100%;" autocomplete="off">
-  <?php echo $this->gen_select($users,$meta['user'],__('Select User','contact-form-hubspot-crm')); ?>
-  </select>
-
-   </div>
-
-   <div class="clear"></div>
-   </div>
- 
-  
-  </div>
-  
-
-  </div>
-  </div>
-<?php
-                  }
  
 
     $file=vxcf_hubspot::$path.'pro/pro-mapping.php';
 if(vxcf_hubspot::$is_pr && file_exists($file)){
 include_once($file);
 }
+if(strpos($module,'vxf_') === false){
 if(in_array($module,array('Ticket'))){
     $pipe='pipes';
 
@@ -706,7 +650,7 @@ $pipes=$this->post($pipe,$info_meta);
   </div>
   </div>
 <?php }
-if(in_array($module,array('Deal'))){
+if(!in_array($module,array('Ticket','Contact','Company','Task','products')) ){
      $pipe='deal_pipes';   
     
 $pipes=$this->post($pipe,$info_meta);
@@ -760,7 +704,8 @@ $pipes=$this->post($pipe,$info_meta);
 
   </div>
   </div>
-<?php }
+<?php } 
+}
  ?>
 
 

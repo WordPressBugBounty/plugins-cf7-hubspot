@@ -11,7 +11,7 @@ class vxcf_hubspot_api extends vxcf_hubspot{
   public $timeout=30;
   public $objects=array('Contact'=>'contacts','Ticket'=>'tickets','Deal'=>'deals','Company'=>'companies','Task'=>'tasks');
   public $url='https://api.hubapi.com/';
-  public $link_types=array('Contact'=>array('company'=>279,'deal'=>4), 'Company'=>array('contact'=>280),'Ticket'=>array('contact'=>16,'company'=>339),'Deal'=>array('contact'=>3,'company'=>341),'Task'=>array('contact'=>204,'company'=>192),'Note'=>array('Contact'=>202,'Company'=>190,'Deal'=>214,'Ticket'=>228),'LineItem'=>array('Deal'=>20));
+  public $link_types=array('Contact'=>array('company'=>279,'deal'=>4), 'Company'=>array('contact'=>280),'Ticket'=>array('contact'=>16,'company'=>339),'Deal'=>array('contact'=>3,'company'=>341),'Task'=>array('contact'=>204,'company'=>192),'Note'=>array('Contact'=>202,'Company'=>190,'Deal'=>214,'Ticket'=>228),'LineItem'=>array(),'leads'=>array('contact'=>578,'company'=>610,'id'=>'0-136'),'carts'=>array('contact'=>586,'line_items'=>590),'orders'=>array('contact'=>507,'company'=>509),'invoices'=>array('contact'=>177,'company'=>179),'line_items'=>array('orders'=>514,'Deal'=>20,'carts'=>591,'invoices'=>410,'quotes'=>468),'quotes'=>array('contact'=>507,'company'=>509),'0-162'=>array('contact'=>798,'company'=>792),'0-420'=>array('contact'=>882,'company'=>884),'0-410'=>array('contact'=>860,'company'=>938),'0-421'=>array('contact'=>966,'company'=>908));
   
   function __construct($info) { 
       if(isset($info['data']) && is_array($info['data'])){
@@ -30,18 +30,25 @@ $this->timeout=self::$api_timeout;
 }
 public function get_token(){
 $info=$this->info;
+if(empty($info['api_key']) || empty($info['refresh_token'])){
+    return $info; //if api key or refresh token empty , do not get token
+}
+
 //$users=$this->get_users();
-$ac=$this->get_account();
+$ac=$this->get_account(); 
  if(!empty($ac['portalId'])){
       $info['portal_id']=$ac['portalId'];
       $info['time_zone']=$ac['timeZone'];
       $info['currency']=$ac['currency'];
       $info['valid_token'] ='true';
+      unset($info['error']); 
   }else{
      unset($info['access_token']); 
+     unset($info['valid_token']); 
        if(is_string($ac)){
    $info['error']=$ac;  
-   
+    }else if(isset($ac['message'])){
+      $info['error']=$ac['message'];   
     }  
   }
 
@@ -67,11 +74,12 @@ return $info;
  // $info["org_id"]=$re['id'];
   $info["class"]='updated';
   $token=$info;
-  }else{
-  $info['error']=$re['error_description'];
+  }else{ 
+      if(!isset($re['message'])){$re['message']='';}
+  $info['error']=$re['message'];
   $info['access_token']="";
    $info["class"]='error';
-  $token=array(array('errorCode'=>'406','message'=>$re['error_description']));
+  $token=array(array('errorCode'=>'406','message'=>$re['message']));
 
   unset($info['valid_token']); 
   }
@@ -172,7 +180,7 @@ return $this->post_hubspot_arr($url);
    if($expiry<$time){
    $info=$this->refresh_token(); 
     
-   }
+   } 
       if(!empty($info['access_token'])){
   $dev_key=$info['access_token'];      
     }   
@@ -217,11 +225,10 @@ return $this->post_hubspot_arr($url);
   $header=array('content-type'=>'application/x-www-form-urlencoded');  
   $body=http_build_query($body); 
   }else{
-    if($type == 'web'){
-        $pars['hapikey']=$dev_key;  
-    }else{  
+
+   // if($type == 'web'){
+ 
   $header['Authorization']=' Bearer ' . $dev_key;     
-    }
  if($method =='file'){
      $files = array(); 
 if(!empty($body['attachments_v2'])){
@@ -273,7 +280,7 @@ if(!empty($body)){
    $body=json_encode(array('error'=>$error));   
   }else if(isset($response['body'])){
    $body=$response['body'];    
-  } //var_dump($body,$method,$path);
+  } //
   if(empty($body)){
   $code=wp_remote_retrieve_response_code($response); 
     if($code == 204){ $body='{"code":"204","message":"No Content"}'; }
@@ -282,8 +289,7 @@ if(!empty($body)){
   if(empty($body) && isset($response['response']) && is_array($response['response'])){
    $body=json_encode($response['response']);   
   }
-  }
-
+  } //var_dump($body,$method,$path,$code);
   return $body; 
   }
   public function build_data_files($boundary, $fields, $files, $file_name='attachments[]'){
@@ -320,10 +326,16 @@ if(!empty($body)){
   * @return array HubSpot Client Information
   */
   public function client_info(){
-      $info=$this->info;
+      $info=$this->info; 
+    //  if(isset($info['client_id']) && $info['client_id']=='66c8b02a-06d8-47f1-b7c9-a0e0b1b28384'){
   $client_id='66c8b02a-06d8-47f1-b7c9-a0e0b1b28384';
   $client_secret='3f9b1144-21e4-47a1-bb57-4f25be001727';
   $call_back="https://www.crmperks.com/sf_auth/";
+   /*   }else{
+      $client_id='9419afa6-cd5d-4fa6-959c-4b7aa93d1899';
+  $client_secret='9c99496a-64c9-4c01-adf2-48db9030a838';
+  $call_back="https://www.crmperks.com/sf_auth/";      
+      }*/
   //custom app
   if(is_array($info)){
       if($this->post('custom_app',$info) == "yes" && $this->post('app_id',$info) !="" && $this->post('app_secret',$info) !="" && $this->post('app_url',$info) !=""){
@@ -339,6 +351,18 @@ if(!empty($body)){
 
 return $this->post_hubspot_arr($url,'get');   
    
+  } 
+   public function get_custom_objects(){
+ $path='crm-object-schemas/v3/schemas';
+$res=$this->post_hubspot_arr($path,'get'); 
+//var_dump($res);
+  $objects=array();
+  if(!empty($res['results'])){
+      foreach($res['results'] as $v){
+          $objects[$v['objectTypeId']]=$v['labels']['plural'];
+      }
+  } 
+return $objects;  
   } 
 public function get_form_fields($object){
         
@@ -433,10 +457,26 @@ return $fields;
          $module='deals'; 
       }
       $path='properties/'.$v.'/'.$module.'/properties';*/
+      $module=$object; $search_fields=$req_fields=$assoc=array();
        if(isset($this->objects[$object])){
  $module=$this->objects[$object];     
   }
-      $path='crm/v3/properties/'.$module;
+  $object_id=$this->find_object_id($object);
+  if(!empty($object_id) || in_array($module,array('invoices')))
+  {
+      $path='crm-object-schemas/v3/schemas/'.$module;
+      $hubspot_response=$this->post_hubspot_arr($path);
+      if(!empty($hubspot_response['requiredProperties'])){
+          $req_fields=$hubspot_response['requiredProperties'];
+      }
+      if(!empty($hubspot_response['searchableProperties'])){
+          $search_fields=$hubspot_response['searchableProperties'];
+      }      if(!empty($hubspot_response['associations'])){
+          $assoc=$hubspot_response['associations'];
+      }
+  }
+      $path='crm/v3/properties/'.$module; //results
+     // $path='crm-object-schemas/v3/schemas/'.$module; //properties
     //  $module='tickets';
 $hubspot_response=$this->post_hubspot_arr($path);  
 //var_dump($hubspot_response);
@@ -445,11 +485,14 @@ $hubspot_response=$this->post_hubspot_arr($path);
    $field_info=$hubspot_response['message'];   
   }else if(isset($hubspot_response['results'][0]) && is_array($hubspot_response['results'][0])){
   $field_info=array();
-  foreach($hubspot_response['results'] as $k=>$field){ //var_dump($field);
+  foreach($hubspot_response['results'] as $k=>$field){ //var_dump($field); 
 
   if(isset($field['modificationMetadata']['readOnlyValue']) && $field['modificationMetadata']['readOnlyValue'] === false ){
-  $required=""; 
-  if(in_array($field['name'],array('email','name','dealname'))){
+  $required="";  
+  if(in_array($field['name'],array('email','name','dealname','hs_lead_name','hs_course_name','hs_name'))){
+  $required="true";   
+  }
+  if(in_array($field['name'],$req_fields)){
   $required="true";   
   } 
   if($object == 'Ticket' && in_array($field['name'],array('subject','content'))){
@@ -476,8 +519,19 @@ $hubspot_response=$this->post_hubspot_arr($path);
   if(! (isset($field['hubspotDefined']) && $field['hubspotDefined'] == true) ){
    $field_arr['is_custom']='true';   
   }
+  if(in_array($field['name'],$search_fields)){
+    $field_arr['search']='1';  
+  }
   $field_info[$field['name']]=$field_arr;  
   }    
+  }
+  if(!empty($assoc)){
+      
+      foreach($assoc as $v){ //
+      if($object_id  == $v['fromObjectTypeId'] && $this->valid_assoc($v['name'])){
+      $name=$v['toObjectTypeId'].'_vxassoc_'.$v['id'];
+     $field_info[$name]=array('name'=>$name,'type'=>'lookup','label'=>'Assign '.$v['name'],'is_custom'=>'true','req'=>'');     
+      } }
   }
   if(in_array($module,array('contacts','companies'))){
    $field_info['id']=array('name'=>'id','type'=>'number','label'=>'ID (Do not map this field)','is_custom'=>'true','req'=>'');    
@@ -503,6 +557,27 @@ $hubspot_response=$this->post_hubspot_arr($path);
   * Get campaigns from hubspot
   * @return array HubSpot campaigns
   */
+private function find_object_id($object){
+$object_id=$object;
+  if(isset($this->link_types[$object]['id'])){
+   $object_id=$this->link_types[$object]['id'];   
+  }
+  if(strpos($object_id,'-')!== false)
+  {
+  return $object_id;    
+  }
+ return '';   
+}
+private function valid_assoc($assoc){
+    $assoc=strtoupper($assoc);
+    $skip=array('_ENGAGEMENT','_FORM_SUBMISSION_INBOUNDDB','_EMAIL','_COMMUNICATION','_SALES_TASK','_POSTAL_MAIL','_MEETING_EVENT','_CONVERSATION_SESSION','_SEQUENCE_ENROLLMENT','_MEETING','COMMUNICATION_');
+    foreach($skip as $v){
+    if(strpos($assoc,$v) !== false){
+        return false;
+    }    
+    }
+ return true;     
+}
 public function get_lists(){
 
 
@@ -532,18 +607,18 @@ return __('No List Found','gravity-forms-hubspot-crm');; // Or throw an exceptio
   return $lists;
 }
 public function get_pipes($object='tickets'){ 
-$hubspot_response=$this->post_hubspot_arr('crm-pipelines/v1/pipelines/'.$object);
-
+$hubspot_response=$this->post_hubspot_arr('crm/v3/pipelines/'.$object); //crm-pipelines/v1/pipelines/
+//var_dump($hubspot_response); die();
   ///seprating fields
   $field_info=__('No List Found','gravity-forms-hubspot-crm');
   if(isset($hubspot_response['results']) && is_array($hubspot_response['results'])){
   $field_info=array();
   foreach($hubspot_response['results'] as $k=>$field){
-      if(!empty($field['stages']) && $field['active'] === true){
+      if(!empty($field['stages']) && $field['archived'] === false ){ //v1 api uses $field['active'] === true  not supports archived field
 if(!empty($field['stages'])){
 foreach($field['stages'] as $stage){
-  if(isset($stage['stageId'])){
-  $field_info[$field['pipelineId'].'-v_xx-'.$stage['stageId']]=$field['label'].' - '.$stage['label'];
+  if(isset($stage['id'])){
+  $field_info[$field['id'].'-v_xx-'.$stage['id']]=$field['label'].' - '.$stage['label'];
       }   
 }
 }  }
@@ -554,9 +629,7 @@ foreach($field['stages'] as $stage){
   }
   return $field_info;
 }
-
-
-  public function get_flows(){ 
+public function get_flows(){ 
   $hubspot_response=$this->post_hubspot_arr('automation/v3/workflows');  
  // var_dump($hubspot_response); die();
   ///seprating fields
@@ -577,25 +650,23 @@ foreach($field['stages'] as $stage){
   * Get users from hubspot
   * @return array HubSpot users
   */
-  public function get_users(){ 
+public function get_users(){ 
 
-  $hubspot_response=$this->post_hubspot_arr('owners/v2/owners');
+  $hubspot_response=$this->post_hubspot_arr('crm/v3/owners');
 
   ///seprating fields
   $field_info=__('No Users Found');
-    if(isset($hubspot_response['status']) && $hubspot_response['status'] == 'error' && !empty($hubspot_response['message'])){
+    if( !empty($hubspot_response['message'])){
    $field_info=$hubspot_response['message'];   
-  } else if( isset($hubspot_response) && is_array($hubspot_response)){
+  } else if( isset($hubspot_response['results']) && is_array($hubspot_response['results'])){
   $field_info=array();
-  foreach($hubspot_response as $k=>$field){
-  $field_info[$field['ownerId']]=$field['firstName'].' '.$field['lastName'].' ( '.$field['email'].' )';     
+  foreach($hubspot_response['results'] as $k=>$field){
+  $field_info[$field['id']]=$field['firstName'].' '.$field['lastName'].' ( '.$field['email'].' )';     
   }
   }
 
   return $field_info;
 }
-
-  
   /**
   * Posts object to hubspot, Creates/Updates Object or add to object feed
   * @param  array $entry_id Needed to update hubspot response
@@ -603,15 +674,61 @@ foreach($field['stages'] as $stage){
   */
 public function push_object($object,$fields,$meta){ 
 
-
-
+/* $sbody=array('filterGroups'=>array(array('filters'=>array(array('propertyName'=>'hs_order_name',"operator"=> "EQ",'value'=>'woo- 18052')) )),'properties'=>array('hs_order_name')); //,'description'
+ $spath='crm/v3/objects/orders/search'; 
+ $search_res=$this->post_hubspot_arr($spath,'post',$sbody);
+ var_dump($search_res); die();
+$path='crm-object-schemas/v3/schemas/leads'; //custom objects //searchableProperties
+//$path='crm/v3/properties/contacts';
+//$path='crm/v3/properties/orders';
+//$path='crm/v3/properties/services';
+//$path='crm/v3/properties/0-410';
+//$path='crm/v3/properties/0-421';
+//$path='crm/v3/properties/listings';
+//$path='crm/v3/objects/0-420';  //listings
+//$path='crm/v3/objects/0-421';  //appointemts
+//$path='crm/v3/objects/0-162'; //services
+//$path='crm/v3/objects/0-410';  //courses
+//$path='crm/v3/objects/leads';
+//$path='crm/v3/objects/drivers';
+//$path='crm/v4/associations/2-39662400/2-41674652/labels'; //deal/labels
+//$path='crm/v3/objects/0-410';
+//$path='crm/v3/objects/'.$object;
+//$path='crm/v3/objects/orders/405243209390';
+//$path='crm/v3/object-library/enablement';
+$res=$this->post_hubspot_arr($path,'get');
+//$res=$this->get_pipes('services');
+var_dump($res); die();
+$arr='{"hs_lead_name":"touseefcccdd ahmadhcccsdd","hs_lead_type":"NEW_BUSINESS","hs_lead_label":"WARM","hs_pipeline":"","hs_pipeline_stage":""}';
+//cart
+//  $post_data='{"properties":{"email":"test1@localhost.com","name":"touseefcccdd ahmadhcccsdd","city":"houston","car_type":"sportage"},"associations":[{"to":"25054424432","types":[{"associationCategory":"HUBSPOT_DEFINED","associationTypeId":"53"}]}]}';
+$arr='{
+    "price": 10,
+    "quantity": 1,
+    "name": "New standalone line item",
+    "hs_sku": "test-sku",
+    "description": "the line item description is eher "
+  }';  
+$links=array();
+//$links[]=array("to"=>array('id'=>'405243209390'),'types'=>array(array("associationCategory"=> "HUBSPOT_DEFINED","associationTypeId"=>$this->link_types[$object]['Order'])));
+//$links[]=array("to"=>array('id'=>'100040290088'),'types'=>array(array("associationCategory"=> "HUBSPOT_DEFINED","associationTypeId"=>860)));
+ //var_dump($this->link_types['0-410']['contact']); die(); 
+//$post=array('properties'=>json_decode($arr,1),'associations'=>$links);
+//$post_data=json_encode($post);
+//var_dump($post_data,$object); die('--------');
+//$hubspot_response=$this->post_hubspot_arr($path,'post',$post_data);
+//var_dump($hubspot_response,$post_data); die();*/
    $extra=$contact=array();
   $portal_id=$id=""; $error=""; $action=""; $link=""; $search=$search_response=$status=""; 
   // entry note
   $entry_exists=false;
     $debug = isset($_REQUEST['vx_debug']) && current_user_can('manage_options'); 
     $event=$this->post('event',$meta);
-
+  $sobject=$object;
+  if(isset($this->objects[$object])){
+ $sobject=$this->objects[$object];     
+  }
+  $object_id=$this->find_object_id($object);
       //remove related list fields
   $files=array();
   for($i=1; $i<11; $i++){
@@ -639,9 +756,8 @@ if(!empty($search_response['vid'])){
 $contact =$search_response['properties'];   
 }
 
-}else if(in_array($object, array('Ticket','Deal','Company'))){
-  $sobject='';
-  if($object == 'Deal'){ $sobject='deals'; }else if($object == 'Ticket'){ $sobject='tickets'; }else if($object == 'Company'){ $sobject='companies'; }
+}else{ //if(in_array($object, array('Ticket','Deal','Company')))
+
  $spath='crm/v3/objects/'.$sobject.'/search';
  $sbody=array('filterGroups'=>array(array('filters'=>array(array('propertyName'=>$field,"operator"=> "EQ",'value'=>$search)))));
  $search_response=$hubspot_response=$this->post_hubspot_arr($spath,'post',$sbody); 
@@ -650,7 +766,7 @@ $contact =$search_response['properties'];
    $id=$search_response['id']; 
  }
  //var_dump($search_response); die();
- }else{
+ }/*else{
 
   $sbody=array();
   $spath='contacts/v1/search/query';
@@ -685,7 +801,7 @@ $contact =$search_response['properties'];
       $portal_id=$hubspot_response['contacts'][0]['portal-id'];     
        }
   }
-    }
+    }*/
      $extra["body"]=$search;
       $extra["response"]=$search_response;   
   if($debug){
@@ -730,18 +846,22 @@ if(!empty($meta['add_pipe']) && !empty($meta['pipe']) ){
 if(!empty($meta['add_sales_pipe']) && !empty($meta['sales_pipe']) ){
     $sep=strpos($meta['sales_pipe'],'-v_xx-') !== false ? '-v_xx-' : '-';
     $exp=explode($sep,$meta['sales_pipe']);
-    $fields['pipeline']=array('value'=>$exp[0],'label'=>'Pipeline');
-    if(!isset($fields['dealstage'])){
-    $fields['dealstage']=array('value'=>$exp[1],'label'=>'Deal Stage');
-    }
+    $pipeline_name='hs_pipeline'; $stage_name='hs_pipeline_stage';
+    if($object == 'Deal'){ $pipeline_name='pipeline'; $stage_name='dealstage'; }
+    $fields[$pipeline_name]=array('value'=>$exp[0],'label'=>'Pipeline');
+    //if(!isset($fields['dealstage'])){
+    $fields[$stage_name]=array('value'=>$exp[1],'label'=>'Stage');
+   // }
 }
  if(!empty($meta['OwnerId']['value'])){
 $fields['hubspot_owner_id']=array('value'=>$meta['OwnerId']['value'],'label'=>'Owner');  
  }
 //var_dump($fields); 
-  $path=''; $send_body=false; $post=$links=array(); //$meta['_vx_contact_id']=array('value' =>301);
+  $path='crm/v3/objects/'; $send_body=false; $post=$links=$field_links=array(); //$meta['_vx_contact_id']=array('value' =>301);
   if(isset($this->objects[$object])){
- $path='crm/v3/objects/'.$this->objects[$object];     
+ $path.=$this->objects[$object];     
+  }else{
+ $path.=$object;    
   }
   //if($error ==""){
   if($id == ""){
@@ -884,7 +1004,11 @@ $key='name';
 if(is_array($fields)){
 foreach($fields as $k=>$v){
 $type = !empty($meta['fields'][$k]['type']) ? $meta['fields'][$k]['type'] : '';  
-  
+if(strpos($k,'_vxassoc_')!== false){
+    $ass_arr=explode('_vxassoc_',$k);
+$field_links[]=array('to'=>$v['value'],'from'=>$id,'to_object'=>$ass_arr[0],'from_object'=>$object_id,"type"=>$ass_arr[1]);
+continue;
+}  
 $v['value']=$this->verify_val($v['value'],$type);
 if($type == 'checkbox' && !empty($meta['fields'][$k]['is_custom']) && !empty($contact[$k]['value'])){
   $v['value']=$contact[$k]['value'].';'.$v['value']; 
@@ -894,7 +1018,8 @@ if($type == 'checkbox' && !empty($meta['fields'][$k]['is_custom']) && !empty($co
 $post[$k]=$v['value'];    
 } //var_dump($post); die();
 } }
- if($status == '1'){
+
+ if($status == '1'){ //associations work for new record only , for old records use put method at end 
 if(!empty($meta['_vx_contact_id']['value']) && isset($this->link_types[$object]['contact'])){
 $links[]=array("to"=>array('id'=>$meta['_vx_contact_id']['value']),'types'=>array(array("associationCategory"=> "HUBSPOT_DEFINED","associationTypeId"=>$this->link_types[$object]['contact'])));
 $extra['Assign Contact']=$meta['_vx_contact_id']['value'];  
@@ -903,6 +1028,10 @@ $extra['Assign Contact']=$meta['_vx_contact_id']['value'];
   $links[]=array("to"=>array('id'=>$meta['_vx_company_id']['value']),'types'=>array(array("associationCategory"=> "HUBSPOT_DEFINED","associationTypeId"=>$this->link_types[$object]['company'])));
    $extra['Assign Company']=$meta['_vx_company_id']['value']; 
    }
+ foreach($field_links as $k=>$v){
+     $type=isset($this->link_types[$object]) ? 'HUBSPOT_DEFINED' : 'USER_DEFINED' ;
+   $extra['Assign '.$k]=$links[]=array("to"=>(string)$v['to'],'types'=>array(array("associationCategory"=> $type,"associationTypeId"=>$v['type'])));  
+ }  
 }
 $post=array('properties'=>$post,'associations'=>$links);
 if($object == 'Task'){
@@ -910,9 +1039,9 @@ if($object == 'Task'){
 }
 //}
 } 
-$hubspot_response=array(); //var_dump($path); die('-----------');
+$hubspot_response=array(); //var_dump($path,$post); die('-----------');
 if(!empty($path)){
-$post_data=json_encode($post);
+ $post_data=json_encode($post);
 //var_dump($path,$post,$object,$id); die('--------');
 $hubspot_response=$this->post_hubspot_arr($path,$method,$post_data);
 //var_dump($hubspot_response,$post,$path); die();
@@ -931,25 +1060,56 @@ if(!$is_form){
 
 if(!empty($meta['order_items']) && $status == '1'){
   $items=$this->get_wc_items($meta);
-  $assoc_items=array();
-  foreach($items as $item){
-      if(!empty($item['p_id'])){
-   $hub_id=get_post_meta($item['p_id'],'vxc_hubspot_id',true);
-   if(empty($hub_id)){
-  //  $product_post=array(array('name'=>'name','value'=>$item['title']),array('name'=>'price','value'=>$item['unit_price']),array('name'=>'description','value'=>esc_html($item['desc'])));  
-    $product_post=array('name'=>$item['title'],'price'=>$item['unit_price'],'description'=>esc_html($item['desc']));  
+  $assoc_items=$filter_ids=array(); $filters=array();
+     if(!empty($meta['order_products'])){
+      $hub_name='name'; $woo_name='title';
+      if( !empty($meta['search_products']) ){
+      $hub_name='hs_sku';    
+      $woo_name='sku';    
+      }    
+  foreach($items as $k=>$item){
+      $filter_ids[$k]=$item[$woo_name];
+ $filters[]=array('filters'=>array(array('propertyName'=>$hub_name,"operator"=> "EQ",'value'=>$item[$woo_name])) );
+      } 
+ $sbody=array('filterGroups'=>$filters,'properties'=>array('name','hs_sku','price')); //,'description'
+ $spath='crm/v3/objects/products/search'; 
+ $search_res=$this->post_hubspot_arr($spath,'post',$sbody);
+  
+ if(!empty($search_res['results'])){
+     $extra['products search']=array_slice($search_res['results'],0,60); 
+  foreach($search_res['results'] as $v){
+      if(!empty($v['properties'][$hub_name])){
+       $item_pos=array_search($v['properties'][$hub_name],$filter_ids);
+       if($item_pos !== false){
+        $items[$item_pos]['hub_id']=$v['id'];   
+       }   
+      }
+  }   
+ }else{
+     $extra['products search']=$search_res; 
+ }
+     }
+       foreach($items as $k=>$item){
+          $item_prop=array('name'=>$item['title'],'price'=>$item['unit_price'],'quantity'=>$item['qty']); 
+           if(!empty($meta['order_products'])){
+               if(!empty($item['hub_id'])){
+             $item_prop['hs_product_id']=$item['hub_id'];      
+               }else{
+         $product_post=array('name'=>$item['title'],'price'=>$item['unit_price'],'description'=>esc_html($item['desc']));  
   $path='crm/v3/objects/products';
  $product_res=$this->post_hubspot_arr($path,'post',json_encode(array('properties'=>$product_post)));
  $extra['create product']=$product_res;    
   if(!empty($product_res['id'])){
-      $hub_id=$product_res['id'];
+      $item_prop['hs_product_id']=$product_res['id'];
   }
-   }
- 
-   $assoc_items[]=array('properties'=>array('name'=>$item['title'],'price'=>$item['unit_price'],'quantity'=>$item['qty'],'hs_product_id'=>$hub_id),'associations'=>array(array("to"=>array('id'=>$id),'types'=>array(array("associationCategory"=> "HUBSPOT_DEFINED","associationTypeId"=>$this->link_types['LineItem'][$object] )))) ); 
-      } }
+           }
+  }
+  $assoc_items[]=array('properties'=>$item_prop,'associations'=>array(array("to"=>array('id'=>$id),'types'=>array(array("associationCategory"=> "HUBSPOT_DEFINED","associationTypeId"=>$this->link_types['line_items'][$object] )))) );    
+       }
+
  //create line item
    $path='crm/v3/objects/line_items/batch/create'; 
+   $extra['line items']=$assoc_items; 
     $product_res=$this->post_hubspot_arr($path,'post',json_encode(array('inputs'=>$assoc_items))); 
     $extra['Add line items']=$product_res;      
 
@@ -961,7 +1121,7 @@ if(!empty($meta['order_items']) && $status == '1'){
    $link='https://app.hubspot.com/contacts/'.$portal_id.'/ticket/'.$id.'/'; 
   $status="1";
   }else{
-  $status="";    
+  //$status="";  //disabled it because,  shows unknow error for do not update contact  
   }
 
 
@@ -974,7 +1134,7 @@ if(!empty($meta['order_items']) && $status == '1'){
   if(!empty($hubspot_response['errors'][0]['message'])){
         $error=$hubspot_response['errors'][0]['message'];
     }
-  $id=''; $status='';
+  $id=''; $status=''; 
   }else{
       $portal_id=$this->info['portal_id'];
       if(isset($hubspot_response['vid']) && isset($hubspot_response['portal-id'])){
@@ -993,9 +1153,14 @@ if(!empty($meta['order_items']) && $status == '1'){
      $link='https://app.hubspot.com/sales/'.$portal_id.'/company/'.$id.'/';     
    }else if($object == 'Deal'){
      $link='https://app.hubspot.com/sales/'.$portal_id.'/deal/'.$id.'/';     
+   }else if($object == 'leads'){
+     $link='https://app.hubspot.com/prospecting/'.$portal_id.'/leads/view/all-leads?leadId='.$id;     
+   }else if($object == 'orders'){
+     $link='https://app.hubspot.com/contacts/'.$portal_id.'/record/0-123/'.$id;     
+   }else if(strpos($object,'-')!== false){
+     $link='https://app.hubspot.com/contacts/'.$portal_id.'/record/'.$object.'/'.$id;     
    }else if($object == 'Contact'){   
    $link='https://app.hubspot.com/contacts/'.$portal_id.'/contact/'.$id.'/';  
-   
    //add to list and work flow
    if(!empty($fields['email']['value']) && !empty($meta['add_flow']) && !empty($meta['flow'])){
        $email=$fields['email']['value'];
@@ -1006,8 +1171,8 @@ if(!empty($meta['order_items']) && $status == '1'){
    }
    //add to static list
       if( !empty($meta['add_list']) && !empty($meta['list'])){
-          $path='contacts/v1/lists/'.$meta['list'].'/add' ;
-   $list_res=$this->post_hubspot_arr($path,'post',array('vids'=>array($id)));
+   $path='crm/v3/lists/'.$meta['list'].'/memberships/add' ;
+   $list_res=$this->post_hubspot_arr($path,'put',array($id));
    $extra['Add to List']=$meta['list']; 
    $extra['List Rsponse']=$list_res; 
        
@@ -1016,16 +1181,21 @@ if(!empty($meta['order_items']) && $status == '1'){
    
    }
  if($status == '2'){
-     if(!empty($meta['_vx_contact_id']['value']) && isset($this->link_types[$object]['contact']) && isset($this->objects[$object]) ){
-       $path='crm/v3/objects/'.$this->objects[$object].'/'.$id.'/associations/contacts/'.$meta['_vx_contact_id']['value'].'/'.$this->link_types[$object]['contact'];
+     if(!empty($meta['_vx_contact_id']['value']) && isset($this->link_types[$object]['contact'])  ){
+      $extra['Assign Contact path']=$path='crm/v3/objects/'.$sobject.'/'.$id.'/associations/contacts/'.$meta['_vx_contact_id']['value'].'/'.$this->link_types[$object]['contact'];
        $comp_res=$this->post_hubspot_arr($path,'put'); 
    $extra['Assign Contact']=$comp_res;  
    }
-      if(!empty($meta['_vx_company_id']['value']) && isset($this->link_types[$object]['company']) && isset($this->objects[$object]) ){
-$path='crm/v3/objects/'.$this->objects[$object].'/'.$id.'/associations/companies/'.$meta['_vx_company_id']['value'].'/'.$this->link_types[$object]['company'];
+      if(!empty($meta['_vx_company_id']['value']) && isset($this->link_types[$object]['company']) ){
+$extra['Assign Company path']=$path='crm/v3/objects/'.$sobject.'/'.$id.'/associations/companies/'.$meta['_vx_company_id']['value'].'/'.$this->link_types[$object]['company'];
         $comp_res=$this->post_hubspot_arr($path,'put');
    $extra['Assign Company']=$comp_res; 
-   }   
+   }
+    foreach($field_links as $k=>$v){ 
+   $extra['Assign path '.$k]=$path='crm/v3/objects/'.$v['from_object'].'/'.$v['from'].'/associations/'.$v['to_object'].'/'.$v['to'].'/'.$v['type'];
+        $comp_res=$this->post_hubspot_arr($path,'put');
+   $extra['Assign '.$k]=$comp_res; 
+ }   
  }
  $file_ids=array();
        if(is_array($files) ){
@@ -1057,7 +1227,6 @@ $path='crm/v3/objects/'.$this->objects[$object].'/'.$id.'/associations/companies
       //
   }
 
- 
 
   if($debug){
   ?>
@@ -1311,7 +1480,7 @@ if(!isset($arr['name']) ){
 }
 }
 return $error;    
-}  
+} 
 }
 }
 ?>

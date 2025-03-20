@@ -490,7 +490,8 @@ $(document).on("change",".vxc_field_option",function(e){
   var action=$(this).data('id');
   var account=$("#vx_account").val();
   button_state_vx("ajax",btn);
-  $.post(ajaxurl,{action:'refresh_data_<?php echo esc_attr($this->id) ?>',vx_crm_ajax:vx_crm_ajax,vx_action:action,account:account},function(res){
+   var object=$("#vx_module").val();
+  $.post(ajaxurl,{action:'refresh_data_<?php echo esc_attr($this->id) ?>',vx_crm_ajax:vx_crm_ajax,vx_action:action,account:account,object:object},function(res){
   var re=$.parseJSON(res);
   button_state_vx("ok",btn);  
   if(re.status){

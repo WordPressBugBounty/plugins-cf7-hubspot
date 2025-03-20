@@ -3,8 +3,8 @@ Contributors: crmperks, sbazzi
 Tags: contact form 7, contact form 7 hubspot, elementor forms hubspot, wpforms hubspot, ninja forms hubspot
 Requires at least: 3.8
 Tested up to: 6.7
-Stable tag: 1.3.6
-Version: 1.3.6
+Stable tag: 1.3.7
+Version: 1.3.7
 Requires PHP: 5.3
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -14,6 +14,18 @@ Send Contact Form 7, WPForms, Elementor, Ninja Forms, WPforms, Elementor, Ninja 
 == Description ==
 
 Contact Form 7 hubspot Plugin sends form submissions from [Contact Form 7](https://wordpress.org/plugins/contact-form-7/), [WPforms](https://wordpress.org/plugins/wpforms-lite/), [Elementor Forms](https://wordpress.org/plugins/elementor/), [Ninja Forms](https://wordpress.org/plugins/ninja-forms/), [Formidable Forms](https://wordpress.org/plugins/formidable/), [Contact Form Entries](https://wordpress.org/plugins/contact-form-entries/) and many other popular contact form plugins to HubSpot CRM. Learn more at [crmperks.com](https://www.crmperks.com/plugins/contact-form-plugins/contact-form-hubspot-plugin/?utm_source=wordpress&utm_medium=directory&utm_campaign=hubspot_readme)
+
+**Unlock Powerful HubSpot Integration with Our Enhanced Features**
+
+We’ve added a host of new features to our Wordpress HubSpot integration, making it more powerful and versatile than ever.
+
+**Seamless Support for All HubSpot Objects**
+
+Effortlessly create and manage any HubSpot object, including Contacts, Companies, Tasks, Tickets, Deals, Leads, Carts, Orders, Invoices, Listings, Services, Courses, and even Custom Objects. Easily associate objects with one another for example, linking a contact to a lead, ticket, or invoice with just a few clicks.
+
+**Transform Your WordPress Forms into Genuine HubSpot Forms**
+
+With our enhanced form mapping feature, you can seamlessly submit WordPress forms as authentic HubSpot online forms. Simply create a feed, map your HubSpot form fields to your WordPress form fields, and let the plugin handle the rest. Plus, track user web activity directly in HubSpot for deeper insights.
 
 == How to Setup ==
 
@@ -26,7 +38,7 @@ Contact Form 7 hubspot Plugin sends form submissions from [Contact Form 7](https
 
 **Connect hubspot account**
 
-Connect any contact form 7 to hubspot account by safe and secure Oauth 2.0 or Hubspot API key. You can user your own hubspot app with oauth 2.0
+Connect any contact form 7 to hubspot account by safe and secure Oauth 2.0 or your Private Hubspot App. You can user your own hubspot app with oauth 2.0
 
 **Map hubspot fields**
 
@@ -64,9 +76,11 @@ Contact Form 7 and some other popular contact forms are good but you can not sen
 <p>Following features are available in Premium version only.   <a href="https://www.crmperks.com/plugins/contact-form-plugins/contact-form-hubspot-plugin/?utm_source=wordpress&utm_medium=directory&utm_campaign=hubspot_readme">Contact Form 7 HubSpot Pro</a>.</p>
 <ul>
 <li>Custom fields, file attachments, custom lists and Phone Number fields.</li>
-<li>Add HubSpot Contact to Deal, Ticket, Task, Company.</li>
+<li>HubSpot Custom fields and custom objects.</li>
+<li>Add HubSpot Contact to Deal, Lead, Order, Invoice, Ticket, Task, Company.</li>
 <li>Contact Lists and Workflows of HubSpot CRM.</li>
-<li>Assign a Company to Contact, Ticket, Task.</li>
+<li>Assign Pipeline and stage to any Hubspot Object.</li>
+<li>Assign a Company to Contact, Order, Ticket, Task.</li>
 <li>Update deals and tickets in HubSpot.</li>
 <li>Track gclid, utm parameters and geolocation when anyone submits a form.</li>
 <li>Lookup customers's email and phone number using popular email and phone lookup services.</li>
@@ -144,6 +158,9 @@ Do not replace your Contact form 7 forms with HubSpot forms. Simply map contact 
 
 == Changelog ==
 
+
+= 1.3.7 =
+* added "all hubspot objects" feature.
 
 = 1.3.6 =
 * fixed "duplicate scopes" issue.

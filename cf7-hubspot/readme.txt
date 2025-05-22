@@ -2,9 +2,9 @@
 Contributors: crmperks, sbazzi
 Tags: contact form 7, contact form 7 hubspot, elementor forms hubspot, wpforms hubspot, ninja forms hubspot
 Requires at least: 3.8
-Tested up to: 6.7
-Stable tag: 1.3.7
-Version: 1.3.7
+Tested up to: 6.8
+Stable tag: 1.3.8
+Version: 1.3.8
 Requires PHP: 5.3
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -131,7 +131,7 @@ Easily integrate contact form 7 to HubSpot with free Wordpress Contact Form 7 Hu
 * Create feeds for hubspot Contacts, Companies and Tickets etc.
 * New WPforms submission will be automatically sent to your hubspot account.
 
-= Connect Elementor form to hubspot =
+= Integrate Hubspot with Elementor form​ =
 
 * Easily Connect Elementor forms to your hubspot account.
 * Create a feed for hubspot Contacts, Companies and Tickets etc.
@@ -158,6 +158,9 @@ Do not replace your Contact form 7 forms with HubSpot forms. Simply map contact 
 
 == Changelog ==
 
+
+= 1.3.8 =
+* fixed "PHP Object Injection Vulnerability" issue.
 
 = 1.3.7 =
 * added "all hubspot objects" feature.

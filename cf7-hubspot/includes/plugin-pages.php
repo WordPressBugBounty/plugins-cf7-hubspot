@@ -1664,6 +1664,9 @@ $crm['custom_app']=$this->post('custom_app',$post);
   /////////////                          
   $this->update_info(array('data'=> $crm),$id);
   $force_check=true;
+       if(!empty($info['data']['api_key']) && $info['data']['api'] == 'web'){
+  $force_check=true;     
+  }
   ////////////////////
   }                
 

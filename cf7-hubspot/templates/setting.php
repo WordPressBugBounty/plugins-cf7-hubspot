@@ -16,7 +16,7 @@
   </div>
   <div class="crm_field_cell2">
   <label for="vx_api"><input type="radio" name="crm[api]" value="api" id="vx_api" class="vx_tabs_radio" <?php if($this->post('api',$info) != "web"){echo 'checked="checked"';} ?>> <?php _e('OAuth 2.0 ','contact-form-hubspot-crm'); $this->tooltip('vx_oauth'); ?></label>
-  <label for="vx_web" style="margin-left: 15px;"><input type="radio" name="crm[api]" value="web" id="vx_web" class="vx_tabs_radio" <?php if($this->post('api',$info) == "web"){echo 'checked="checked"';} ?>> <?php _e('Private app ','contact-form-hubspot-crm'); $this->tooltip('vx_api'); ?></label> 
+  <label for="vx_web" style="margin-left: 15px;"><input type="radio" name="crm[api]" value="web" id="vx_web" class="vx_tabs_radio" <?php if($this->post('api',$info) == "web"){echo 'checked="checked"';} ?>> <?php _e('Private app (supports sensitive data) ','contact-form-hubspot-crm'); $this->tooltip('vx_api'); ?></label> 
   </div>
   <div class="clear"></div>
   </div>

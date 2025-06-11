@@ -30,7 +30,7 @@ $this->timeout=self::$api_timeout;
 }
 public function get_token(){
 $info=$this->info;
-if(empty($info['api_key']) || empty($info['refresh_token'])){
+if(empty($info['api_key']) && empty($info['refresh_token'])){
     return $info; //if api key or refresh token empty , do not get token
 }
 
@@ -249,7 +249,8 @@ $body = $this->build_data_files($boundary, $body, $files,$file_name);
 
 }else if($method != "get"){
           if(is_array($body)){
-          $body=json_encode($body); }
+          $body=json_encode($body); 
+          }
   $header['content-length']= strlen($body);
   $header['content-type']='application/json';
   }else{
@@ -289,7 +290,7 @@ if(!empty($body)){
   if(empty($body) && isset($response['response']) && is_array($response['response'])){
    $body=json_encode($response['response']);   
   }
-  } //var_dump($body,$method,$path,$code);
+  } //var_dump($body,$header,$path);
   return $body; 
   }
   public function build_data_files($boundary, $fields, $files, $file_name='attachments[]'){
@@ -444,7 +445,8 @@ if(!empty($res_def['subscriptionDefinitions'])){
 //var_dump($fields,$free_fields);
 return $fields;     
 }
-      
+
+$api=$this->post('api',$this->info);      
   if($object == 'Task'){
     return array('name'=>array('name'=>'name','label'=>'Title','type'=>'Text'),'description'=>array('name'=>'description','label'=>'Note','type'=>'Text','req'=>'true'),'timestamp'=>array('name'=>'timestamp', 'label'=>'Due Date','type'=>'Datetime'));  
   }
@@ -484,8 +486,21 @@ $hubspot_response=$this->post_hubspot_arr($path);
   if( !empty($hubspot_response['message'])){
    $field_info=$hubspot_response['message'];   
   }else if(isset($hubspot_response['results'][0]) && is_array($hubspot_response['results'][0])){
+   $hub_fields=$hubspot_response['results'];   
+if($api == 'web'){
+$path='crm/v3/properties/'.$module.'?dataSensitivity=highly_sensitive'; //results
+$hub_res=$this->post_hubspot_arr($path);  
+if(isset($hub_res['results'][0])){
+    $hub_fields=array_merge($hub_fields,$hub_res['results']);
+} 
+$path='crm/v3/properties/'.$module.'?dataSensitivity=sensitive'; //results
+$hub_res=$this->post_hubspot_arr($path);  
+if(isset($hub_res['results'][0])){
+    $hub_fields=array_merge($hub_fields,$hub_res['results']);
+}  
+} //var_dump($hub_fields);
   $field_info=array();
-  foreach($hubspot_response['results'] as $k=>$field){ //var_dump($field); 
+  foreach($hub_fields as $k=>$field){ //var_dump($field); 
 
   if(isset($field['modificationMetadata']['readOnlyValue']) && $field['modificationMetadata']['readOnlyValue'] === false ){
   $required="";  
@@ -1480,7 +1495,7 @@ if(!isset($arr['name']) ){
 }
 }
 return $error;    
-} 
+}  
 }
 }
 ?>

@@ -3,8 +3,8 @@ Contributors: crmperks, sbazzi
 Tags: contact form 7, contact form 7 hubspot, elementor forms hubspot, wpforms hubspot, ninja forms hubspot
 Requires at least: 3.8
 Tested up to: 6.8
-Stable tag: 1.3.9
-Version: 1.3.9
+Stable tag: 1.4.0
+Version: 1.4.0
 Requires PHP: 5.3
 License: GPLv3
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -157,6 +157,9 @@ Do not replace your Contact form 7 forms with HubSpot forms. Simply map contact 
 * You can manually send any Formidable Form entry to hubspot by clicking "send to hubspot" button.
 
 == Changelog ==
+
+= 1.4.0 =
+* fixed "hubspot cookie" issue with elementor forms.
 
 = 1.3.9 =
 * added support for hubspot sensitive data.

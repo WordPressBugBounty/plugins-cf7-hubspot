@@ -2,7 +2,7 @@
 /**
 * Plugin Name: WP Contact Form HubSpot
 * Description: Integrates Contact Form 7 and <a href="https://wordpress.org/plugins/contact-form-entries/">Contact Form Entries Plugin</a> and many other forms with HubSpot allowing form submissions to be automatically sent to your HubSpot account 
-* Version: 1.3.9
+* Version: 1.4.0
 * Requires at least: 3.8
 * Author URI: https://www.crmperks.com
 * Plugin URI: https://www.crmperks.com/plugins/contact-form-plugins/contact-form-hubspot-plugin/
@@ -25,7 +25,7 @@ class vxcf_hubspot {
   public  $crm_name = "hubspot";
   public  $id = "vxcf_hubspot";
   public  $domain = "vxcf-hubspot";
-  public  $version = "1.3.9";
+  public  $version = "1.4.0";
   public  $update_id = "6000001";
   public  $min_cf_version = "1.0";
   public $type = "vxcf_hubspot";
@@ -145,8 +145,7 @@ die();*/
   add_action('init', array($this,'init'));
        //loading translations
 load_plugin_textdomain('contact-form-hubspot-crm', FALSE,  $this->plugin_dir_name(). '/languages/' );
-  
-
+  $this->maybe_install(true);
 }
   
   }
@@ -166,16 +165,31 @@ if($start_instance){
 self::$plugin->instance();
 }
 } }
- public function install_plugin(){
-       $data=$this->get_data_object();
+  /**
+  * create tables and roles
+  * 
+  */
+public function maybe_install($version_check=false){
+    
+  if(current_user_can( 'manage_options' )){
+  self::$db_version=get_option($this->type."_version");
+     $do_install=false;
+      if($version_check == false){
+        $do_install=true;  
+      }else if(self::$db_version != $this->version){
+        $do_install=true;   
+      }
+  if($do_install){
+  $data=$this->get_data_object();
   $data->update_table();
   update_option($this->type."_version", $this->version);
-
-  if(empty(self::$path)){   self::$path=$this->get_base_path(); }
+  //add post permissions
   require_once(self::$path . "includes/install.php"); 
   $install=new vxcf_hubspot_install();
-  $install->create_roles();  
- } 
+  $install->create_roles();   
+  }
+  } 
+} 
  public function form_submitted($form){ 
 
     //entries plugin exists , do not use this hook
@@ -533,29 +547,7 @@ $this->push($entry,$form,'',false);
   echo wp_kses_post($message) ;
   echo '</p></div>';
   } 
-
-
-  /**
-  * create tables and roles
-  * 
-  */
-  public function install(){
-      
-  if(current_user_can( 'manage_options' )){
-  self::$db_version=get_option($this->type."_version");
-  if(self::$db_version != $this->version){
-  $data=$this->get_data_object();
-  $data->update_table();
-  update_option($this->type."_version", $this->version);
-  //add post permissions
-  require_once(self::$path . "includes/install.php"); 
-  $install=new vxcf_hubspot_install();
-  $install->create_roles();   
-
-  }
-
-  } 
-  }
+  
 /**
 * Contact Form status
 * 
@@ -1289,7 +1281,7 @@ if(!current_user_can($this->id."_send_to_crm")){return; }
   */
   public function activate(){ 
 $this->plugin_api(true);
-$this->install_plugin();
+$this->maybe_install();
 do_action('plugin_status_'.$this->type,'activate');  
   }
     /**
@@ -1678,12 +1670,12 @@ $entry['_vx_created']=isset($entry['__vx_entry']['created']) ? $entry['__vx_entr
  if(!empty($entry['__vx_entry'])){  
   $entry['_vx_url']=$entry['__vx_entry']['url'];     
  }
- if(!is_admin()){
+// if(!is_admin()){
  $entry['_vx_htuk']=isset($_COOKIE['hubspotutk']) ? $_COOKIE['hubspotutk'] : null;
  if(empty($entry['_vx_url'])){
      $entry['_vx_url']=$_SERVER['HTTP_REFERER'];
 }
- }
+// }
 if(empty($entry['_vx_url'])){
 $entry['_vx_url']=site_url();
 }

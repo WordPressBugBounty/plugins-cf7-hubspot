@@ -2,7 +2,7 @@
 /**
 * Plugin Name: WP Contact Form HubSpot
 * Description: Integrates Contact Form 7 and <a href="https://wordpress.org/plugins/contact-form-entries/">Contact Form Entries Plugin</a> and many other forms with HubSpot allowing form submissions to be automatically sent to your HubSpot account 
-* Version: 1.4.0
+* Version: 1.4.4
 * Requires at least: 3.8
 * Author URI: https://www.crmperks.com
 * Plugin URI: https://www.crmperks.com/plugins/contact-form-plugins/contact-form-hubspot-plugin/
@@ -25,7 +25,7 @@ class vxcf_hubspot {
   public  $crm_name = "hubspot";
   public  $id = "vxcf_hubspot";
   public  $domain = "vxcf-hubspot";
-  public  $version = "1.4.0";
+  public  $version = "1.4.4";
   public  $update_id = "6000001";
   public  $min_cf_version = "1.0";
   public $type = "vxcf_hubspot";
@@ -256,16 +256,15 @@ if(is_array($post_data)){
   $val=$uploaded_files[$name];
    }
 
-   if( !empty($val) && isset($v['basetype']) && $v['basetype'] == 'mfile' && function_exists('dnd_get_upload_dir') ){
+  if( !empty($val) && isset($v['basetype']) && $v['basetype'] == 'mfile' && function_exists('dnd_get_upload_dir') ){
       $dir=dnd_get_upload_dir(); 
      $f_arr=array();
       foreach($val as $file){
-     $file_name=explode('/',$file);
+     $file_name=explode('/',$file); 
      if(count($file_name)>1){
-      $f_arr[]=$dir['upload_url'].'/'.$file_name[1];    
+      $f_arr[]=$dir['upload_url'].'/'.end($file_name);    
      }
-      }
-        
+      }   
    $val=$f_arr;   
    }  
     if(!isset($uploaded_files[$name])){
@@ -972,7 +971,7 @@ return $result;
    }
  $fields=$this->form_fields;  
  $type=isset($fields[$field_id]['type']) ? $fields[$field_id]['type'] : '';
-if( $type == 'file' && !empty($value)){
+if( $type == 'file' && !empty($value)){ 
     if(class_exists('vxcf_form')){
 $upload=vxcf_form::get_upload_dir(); 
 $temp_files=array();
@@ -987,10 +986,10 @@ foreach($value as $f){
   $temp_files[]=$f;   
 }  $value=$temp_files;   
     }
-$value=trim(implode(' ',$value));
+$value=trim(implode(' ',$value)); 
  }else if( is_array($value) && count($value) == 1 ){
    $value=trim(implode(' ',$value));  
- }
+ } 
   return $value;        
   }
   /**
@@ -1897,7 +1896,6 @@ $entry_note=$this->process_tags($entry,$data['note_val']);
   }
   // 
   }
-
  
 $no_filter=true;    
   //not submitted by admin

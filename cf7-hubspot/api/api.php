@@ -994,7 +994,7 @@ $type = !empty($meta['fields'][$k]['type']) ? $meta['fields'][$k]['type'] : '';
 $obj_type = !empty($meta['fields'][$k]['object']) ? $meta['fields'][$k]['object'].'.' : '';  
 if( !in_array($obj_type,array('zTICKET.','zCOMPANY.')) ){ $obj_type=''; } //company name field in contact needs COMPANY.name   
 $v['value']=$this->verify_val($v['value'],$type);
-$post['fields'][]=array('name'=>$obj_type.$k,'value'=>$v['value'],'objectTypeId'=>$meta['fields'][$k]['object']);
+$post['fields'][]=array('name'=>$obj_type.$k,'value'=>$v['value'],'objectTypeId'=>!empty($meta['fields'][$k]['object']) ? $meta['fields'][$k]['object']: null);
 } }
 
 if(!empty($meta['_vx_entry']['_vx_htuk'])){

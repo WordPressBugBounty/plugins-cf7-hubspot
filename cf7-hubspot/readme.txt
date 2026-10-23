@@ -2,7 +2,7 @@
 Contributors: crmperks, sbazzi
 Tags: contact form 7, contact form 7 hubspot, elementor forms hubspot, wpforms hubspot, ninja forms hubspot
 Requires at least: 3.8
-Tested up to: 6.9
+Tested up to: 7.1
 Stable tag: 1.4.5
 Version: 1.4.5
 Requires PHP: 5.3
